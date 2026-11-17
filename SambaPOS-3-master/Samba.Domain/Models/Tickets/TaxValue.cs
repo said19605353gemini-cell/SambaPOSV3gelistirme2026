@@ -14,6 +14,7 @@ namespace Samba.Domain.Models.Tickets
 
         public TaxValue(TaxTemplate taxTemplate)
         {
+            TaxType = taxTemplate.TaxType;
             TaxRate = taxTemplate.Rate;
             TaxTemplateId = taxTemplate.Id;
             TaxTemplateName = taxTemplate.Name;
@@ -21,6 +22,8 @@ namespace Samba.Domain.Models.Tickets
             Rounding = taxTemplate.Rounding;
         }
 
+        [DataMember(Name = "TY")]
+        public int TaxType { get; set; } // 0: Yüzde (%), 1: Tutar (TL)
         [DataMember(Name = "TR")]
         public decimal TaxRate { get; set; }
         [DataMember(Name = "RN")]
@@ -41,7 +44,11 @@ namespace Samba.Domain.Models.Tickets
         public decimal GetTax(bool taxIncluded, decimal price, decimal totalRate)
         {
             decimal result;
-            if (taxIncluded && totalRate > 0)
+            if (TaxType == 1) // Sabit Tutar (TL)
+            {
+                result = TaxRate;
+            }
+            else if (taxIncluded && totalRate > 0)
             {
                 if (Rounding > 0)
                     result = decimal.Round((price * TaxRate) / (100 + totalRate), Rounding, MidpointRounding.AwayFromZero);

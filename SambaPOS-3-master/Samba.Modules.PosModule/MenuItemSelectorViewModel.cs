@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
@@ -37,6 +37,7 @@ namespace Samba.Modules.PosModule
         public ICaptionCommand DecPageNumberCommand { get; set; }
         public ICaptionCommand SubCategoryCommand { get; set; }
         public ICaptionCommand CloseMenuViewCommand { get; set; }
+        public ICaptionCommand SendOrdersCommand { get; set; }
 
         public ScreenMenuCategory MostUsedItemsCategory { get; set; }
 
@@ -133,6 +134,7 @@ namespace Samba.Modules.PosModule
             DecPageNumberCommand = new CaptionCommand<string>("<< " + Localization.Properties.Resources.PreviousPage, OnDecPageNumber, CanDecPageNumber);
             SubCategoryCommand = new CaptionCommand<ScreenSubCategoryButton>(".", OnSubCategoryCommand);
             CloseMenuViewCommand = new CaptionCommand<string>(Localization.Properties.Resources.Close, OnCloseMenuView);
+            SendOrdersCommand = new CaptionCommand<string>("Siparişleri Gönder / Güncelle", OnSendOrders);
 
             EventServiceFactory.EventService.GetEvent<GenericEvent<EventAggregator>>().Subscribe(OnEvent);
             NumeratorValue = "";
@@ -170,6 +172,11 @@ namespace Samba.Modules.PosModule
         private void OnCloseMenuView(string obj)
         {
             EventServiceFactory.EventService.PublishEvent(EventTopicNames.ActivatePosView);
+        }
+
+        private void OnSendOrders(string obj)
+        {
+            EventServiceFactory.EventService.PublishEvent(EventTopicNames.CloseTicketRequested);
         }
 
         private void OnEvent(EventParameters<EventAggregator> obj)

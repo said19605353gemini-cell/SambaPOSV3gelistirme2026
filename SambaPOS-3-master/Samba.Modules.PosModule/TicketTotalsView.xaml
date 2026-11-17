@@ -20,6 +20,26 @@
                          Visibility="{Binding IsPlainTotalVisible,Converter={StaticResource VisibilityConverter}}" />
         </DockPanel>
 
+        <!-- SELF SERVİS SEÇENEKLERİ -->
+        <Border BorderBrush="#DDD" BorderThickness="0,1,0,1" Margin="0,4,0,4" Padding="0,3,0,3">
+            <DockPanel LastChildFill="True">
+                <CheckBox Content="Self Servis" FontWeight="SemiBold" VerticalAlignment="Center" IsChecked="{Binding IsSelfServiceChecked}" Margin="0,0,8,0" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Visibility="{Binding IsSelfServiceChecked, Converter={StaticResource VisibilityConverter}}">
+                    <ComboBox Width="48" Margin="0,0,4,0" ItemsSource="{Binding SelfServiceDiscountTypes}" SelectedItem="{Binding SelectedSelfServiceDiscountType}" />
+                    <TextBox Width="50" TextAlignment="Right" Text="{Binding SelfServiceDiscountAmount, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <DockPanel Visibility="{Binding IsSelfServiceDiscountVisible, Converter={StaticResource VisibilityConverter}}">
+            <TextBlock Foreground="DarkRed" FontSize="16" Text="Self Servis İndirimi:" />
+            <TextBlock Foreground="DarkRed" FontSize="16" TextAlignment="Right">
+                <TextBlock.Text>
+                    <Binding Path="TicketSelfServiceDiscountLabel" StringFormat="-{0}" />
+                </TextBlock.Text>
+            </TextBlock>
+        </DockPanel>
+
         <ItemsControl ItemsSource="{Binding PreServicesList}" HorizontalContentAlignment="Stretch">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>

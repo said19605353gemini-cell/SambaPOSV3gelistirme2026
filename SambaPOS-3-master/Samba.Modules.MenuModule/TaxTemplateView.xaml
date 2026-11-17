@@ -25,7 +25,11 @@
                       ItemsSource="{Binding AccountTransactionTypes}"
                       DisplayMemberPath="Name"
                       SelectedItem="{Binding AccountTransactionType}" />
-                    <Label HorizontalAlignment="Left" Content="{LocText Rate,Suffix=':'}"/>
+                    <Label HorizontalAlignment="Left" Content="Vergi Türü:" />
+                    <ComboBox HorizontalAlignment="Left" MinWidth="200" 
+                      ItemsSource="{Binding TaxTypes}"
+                      SelectedItem="{Binding SelectedTaxType}" />
+                    <Label HorizontalAlignment="Left" Content="Oran (%) veya Tutar (TL):"/>
                     <UIControls:FilteredTextBox HorizontalAlignment="Left" Type="Number" MinWidth="50" Text="{Binding Rate}" />
                     <Label HorizontalAlignment="Left" Content="{LocText Rounding,Suffix=':'}"/>
                     <UIControls:FilteredTextBox HorizontalAlignment="Left" Type="Digits" MinWidth="50" Text="{Binding Rounding}" />

@@ -129,6 +129,10 @@ namespace Samba.Domain.Models.Tickets
         public decimal ExchangeRate { get; set; }
         public bool TaxIncluded { get; set; }
 
+        public bool IsSelfService { get; set; }
+        public int SelfServiceDiscountType { get; set; } // 0: Yüzde (%), 1: Sabit Tutar (TL)
+        public decimal SelfServiceDiscountAmount { get; set; }
+
         public virtual AccountTransactionDocument TransactionDocument { get; set; }
 
         private IList<TicketEntity> _ticketEntities;
@@ -305,9 +309,21 @@ namespace Samba.Domain.Models.Tickets
             return Orders.Count();
         }
 
+        public decimal GetSelfServiceDiscount()
+        {
+            if (!IsSelfService || SelfServiceDiscountAmount <= 0) return 0;
+            var plainSum = GetPlainSum();
+            if (SelfServiceDiscountType == 0) // Yüzde (%)
+            {
+                return decimal.Round((plainSum * SelfServiceDiscountAmount) / 100, LocalSettings.Decimals);
+            }
+            // Sabit Tutar (TL)
+            return Math.Min(plainSum, decimal.Round(SelfServiceDiscountAmount, LocalSettings.Decimals));
+        }
+
         public decimal GetSum()
         {
-            var plainSum = GetPlainSum();
+            var plainSum = GetPlainSum() - GetSelfServiceDiscount();
             var services = CalculateServices(Calculations.Where(x => !x.IncludeTax), plainSum);
             var tax = TaxIncluded ? 0 : CalculateTax(plainSum, services);
             plainSum = plainSum + services + tax;
@@ -317,7 +333,7 @@ namespace Samba.Domain.Models.Tickets
 
         public decimal GetSum(int taxTempleteAccountTransactionTypeId)
         {
-            var plainSum = GetPlainSum(taxTempleteAccountTransactionTypeId);
+            var plainSum = GetPlainSum(taxTempleteAccountTransactionTypeId) - GetSelfServiceDiscount();
             var services = CalculateServices(Calculations.Where(x => !x.IncludeTax), plainSum);
             var tax = TaxIncluded ? 0 : CalculateTax(plainSum, services);
             plainSum = plainSum + services + tax;

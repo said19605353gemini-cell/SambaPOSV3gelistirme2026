@@ -13,6 +13,7 @@ namespace Samba.Domain.Models.Menus
 
         public int SortOrder { get; set; }
         public string UserString { get { return Name; } }
+        public int TaxType { get; set; } // 0: Yüzde (%), 1: Tutar (TL)
         public decimal Rate { get; set; }
         public int Rounding { get; set; }
         public virtual AccountTransactionType AccountTransactionType { get; set; }

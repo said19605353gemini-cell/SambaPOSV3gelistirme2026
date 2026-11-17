@@ -221,7 +221,13 @@ namespace Samba.Persistance.Data
             modelBuilder.Entity<Payment>().Property(x => x.Amount).HasPrecision(precision, scale);
 
             //TaxTemplate
+            modelBuilder.Entity<TaxTemplate>().Ignore(x => x.TaxType);
             modelBuilder.Entity<TaxTemplate>().Property(x => x.Rate).HasPrecision(precision, scale);
+
+            //Ticket
+            modelBuilder.Entity<Ticket>().Ignore(x => x.IsSelfService);
+            modelBuilder.Entity<Ticket>().Ignore(x => x.SelfServiceDiscountType);
+            modelBuilder.Entity<Ticket>().Ignore(x => x.SelfServiceDiscountAmount);
 
             //MenuItemPrice
             modelBuilder.Entity<MenuItemPrice>().Property(x => x.Price).HasPrecision(precision, scale);

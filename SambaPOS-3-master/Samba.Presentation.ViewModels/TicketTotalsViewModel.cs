@@ -81,19 +81,68 @@ namespace Samba.Presentation.ViewModels
         public IEnumerable<ServiceViewModel> PostServicesList { get { return PostServices.Where(x => x.CalculationAmount != 0); } }
 
         public decimal TicketTotalValue { get { return Model.GetSum(); } }
-        public decimal TicketTaxValue { get { return Model.CalculateTax(Model.GetPlainSum(), Model.GetPreTaxServicesTotal()); } }
-        public decimal TicketSubTotalValue { get { return Model.GetPlainSum() + Model.GetPreTaxServicesTotal(); } }
+        public decimal TicketTaxValue { get { return Model.CalculateTax(Model.GetPlainSum() - Model.GetSelfServiceDiscount(), Model.GetPreTaxServicesTotal()); } }
+        public decimal TicketSubTotalValue { get { return Model.GetPlainSum() - Model.GetSelfServiceDiscount() + Model.GetPreTaxServicesTotal(); } }
         public decimal TicketPaymentValue { get { return Model.GetPaymentAmount(); } }
         public decimal TicketChangePaymentValue { get { return Model.GetChangeAmount(); } }
         public decimal TicketRemainingValue { get { return Model.GetRemainingAmount(); } }
         public decimal TicketPlainTotalValue { get { return Model.GetPlainSum(); } }
+        public decimal TicketSelfServiceDiscountValue { get { return Model.GetSelfServiceDiscount(); } }
+
+        public bool IsSelfServiceChecked
+        {
+            get { return Model != null && Model.IsSelfService; }
+            set
+            {
+                if (Model != null && Model.IsSelfService != value)
+                {
+                    Model.IsSelfService = value;
+                    if (value && Model.SelfServiceDiscountAmount == 0)
+                    {
+                        Model.SelfServiceDiscountAmount = 10; // Varsayılan %10 indirim
+                    }
+                    Refresh();
+                }
+            }
+        }
+
+        public string[] SelfServiceDiscountTypes { get { return new[] { "%", "TL" }; } }
+
+        public string SelectedSelfServiceDiscountType
+        {
+            get { return (Model != null && Model.SelfServiceDiscountType == 1) ? "TL" : "%"; }
+            set
+            {
+                if (Model != null)
+                {
+                    Model.SelfServiceDiscountType = value == "TL" ? 1 : 0;
+                    Refresh();
+                }
+            }
+        }
+
+        public decimal SelfServiceDiscountAmount
+        {
+            get { return Model != null ? Model.SelfServiceDiscountAmount : 0; }
+            set
+            {
+                if (Model != null && Model.SelfServiceDiscountAmount != value)
+                {
+                    Model.SelfServiceDiscountAmount = value;
+                    Refresh();
+                }
+            }
+        }
+
+        public bool IsSelfServiceDiscountVisible { get { return TicketSelfServiceDiscountValue > 0; } }
+        public string TicketSelfServiceDiscountLabel { get { return TicketSelfServiceDiscountValue.ToString(LocalSettings.ReportCurrencyFormat); } }
 
         public bool IsTicketTotalVisible { get { return TicketPaymentValue > 0 && TicketTotalValue > 0; } }
         public bool IsTicketPaymentVisible { get { return TicketPaymentValue > 0; } }
         public bool IsTicketChangePaymentVisible { get { return TicketChangePaymentValue > 0; } }
         public bool IsTicketRemainingVisible { get { return TicketRemainingValue > 0; } }
         public bool IsTicketTaxTotalVisible { get { return TicketTaxValue > 0; } }
-        public bool IsPlainTotalVisible { get { return PostServicesList.Any() || PreServicesList.Any() || IsTicketTaxTotalVisible; } }
+        public bool IsPlainTotalVisible { get { return PostServicesList.Any() || PreServicesList.Any() || IsTicketTaxTotalVisible || IsSelfServiceDiscountVisible; } }
         public bool IsTicketSubTotalVisible { get { return PostServicesList.Any() && PreServicesList.Any(); } }
 
         public string TicketPlainTotalLabel { get { return TicketPlainTotalValue.ToString(LocalSettings.ReportCurrencyFormat); } }
@@ -194,6 +243,12 @@ namespace Samba.Presentation.ViewModels
             RaisePropertyChanged(() => TicketTaxLabel);
             RaisePropertyChanged(() => TicketTotalLabel);
             RaisePropertyChanged(() => TicketPlainTotalLabel);
+            RaisePropertyChanged(() => TicketSelfServiceDiscountLabel);
+            RaisePropertyChanged(() => IsSelfServiceChecked);
+            RaisePropertyChanged(() => SelectedSelfServiceDiscountType);
+            RaisePropertyChanged(() => SelfServiceDiscountAmount);
+            RaisePropertyChanged(() => IsSelfServiceDiscountVisible);
+            RaisePropertyChanged(() => TicketSelfServiceDiscountValue);
 
             RaisePropertyChanged(() => IsTicketSubTotalVisible);
             RaisePropertyChanged(() => IsPlainTotalVisible);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
@@ -499,6 +499,54 @@ namespace Samba.Modules.PosModule
             }
             ExpectedAction = null;
             _messagingService.SendMessage(Messages.TicketRefreshMessage, result.TicketId.ToString(CultureInfo.InvariantCulture));
+
+            // Mutfak Bilgisayarına Ağ Üzerinden Anlık Sipariş Paketi Gönder
+            try
+            {
+                if (result.TicketId > 0)
+                {
+                    var savedTicket = _ticketService.OpenTicket(result.TicketId);
+                    if (savedTicket != null && savedTicket.Orders.Count > 0)
+                    {
+                        var tableName = "";
+                        if (savedTicket.TicketEntities != null && savedTicket.TicketEntities.Any())
+                        {
+                            var firstEntity = savedTicket.TicketEntities.FirstOrDefault();
+                            if (firstEntity != null) tableName = firstEntity.EntityName;
+                        }
+
+                        // En son eklenen siparişlerin zamanını kontrol et (son 2 dakika içinde eklenenler yeni ekleme sayılır)
+                        var maxOrderTime = savedTicket.Orders.Max(x => x.CreatedDateTime);
+                        var hasOlderOrders = savedTicket.Orders.Any(x => (maxOrderTime - x.CreatedDateTime).TotalSeconds > 10);
+
+                        var packet = new KitchenOrderNetworkPacket
+                        {
+                            Command = "NEW_ORDER",
+                            TicketId = savedTicket.Id,
+                            TicketNumber = savedTicket.TicketNumber,
+                            TableName = string.IsNullOrEmpty(tableName) ? string.Format("Adisyon #{0}", savedTicket.TicketNumber) : tableName,
+                            TotalAmount = savedTicket.GetSum(),
+                            CreatedDateTime = savedTicket.LastOrderDate,
+                            Items = savedTicket.Orders.Select(o => new KitchenOrderItemPacket
+                            {
+                                MenuItemName = o.MenuItemName,
+                                Quantity = o.Quantity,
+                                PortionName = o.PortionName,
+                                Tags = o.GetOrderTagValues() != null ? string.Join(", ", o.GetOrderTagValues().Select(t => t.TagValue)) : "",
+                                IsNewAddition = hasOlderOrders && (maxOrderTime - o.CreatedDateTime).TotalSeconds <= 10
+                            }).ToList()
+                        };
+
+                        System.Threading.ThreadPool.QueueUserWorkItem(state =>
+                        {
+                            // Yapılandırılmış tüm mutfak / bar IP:Port adreslerine JSON paketi fırlat
+                            KitchenNetworkManager.BroadcastOrderToAll(packet);
+                        });
+                    }
+                }
+            }
+            catch { }
+
             _applicationStateSetter.SetApplicationLocked(false);
         }
 

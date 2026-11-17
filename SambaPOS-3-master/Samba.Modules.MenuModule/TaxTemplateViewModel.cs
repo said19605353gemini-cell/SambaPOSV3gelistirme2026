@@ -20,6 +20,22 @@ namespace Samba.Modules.MenuModule
 
         public AccountTransactionType AccountTransactionType { get { return Model.AccountTransactionType; } set { Model.AccountTransactionType = value; } }
 
+        private string[] _taxTypes;
+        public string[] TaxTypes
+        {
+            get
+            {
+                return _taxTypes ?? (_taxTypes = new[] { "Yüzde (%)", "Tutar (TL)" });
+            }
+        }
+
+        public string SelectedTaxType
+        {
+            get { return TaxTypes[Model.TaxType >= 0 && Model.TaxType < TaxTypes.Length ? Model.TaxType : 0]; }
+            set { Model.TaxType = Array.IndexOf(TaxTypes, value); }
+        }
+
+        public int TaxType { get { return Model.TaxType; } set { Model.TaxType = value; } }
         public decimal Rate { get { return Model.Rate; } set { Model.Rate = value; } }
         public int Rounding { get { return Model.Rounding; } set { Model.Rounding = value; } }
 
